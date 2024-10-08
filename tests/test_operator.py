@@ -104,7 +104,30 @@ class TestBasicOperator:
             "limit": 0,
             "projection": None,
         }
+    # Operator in tests part (=) to MOngoObejectId
+    def test_operator_in_to_mongo_object(self) -> None:
+        query_result = mqm(string_query="country=66aa98e72dc33f28d59008c1,66aa98e72dc33f28d59008c2")
 
+        assert query_result == {
+            "filter": {"country": {"$in": ["66aa98e72dc33f28d59008c1", "66aa98e72dc33f28d59008c2"]}},
+            "sort": None,
+            "skip": 0,
+            "limit": 0,
+            "projection": None,
+        }
+    
+    # Operator in tests part (=) to MOngoObejectId
+    def test_operator_not_in_to_mongo_object(self) -> None:
+        query_result = mqm(string_query="country=66aa98e72dc33f28d59008c1,66aa98e72dc33f28d59008c2")
+
+        assert query_result == {
+            "filter": {"country": {"$in": ["66aa98e72dc33f28d59008c1", "66aa98e72dc33f28d59008c2"]}},
+            "sort": None,
+            "skip": 0,
+            "limit": 0,
+            "projection": None,
+        }
+    
     # Operator exists tests part (!=)
     def test_operator_exists(self) -> None:
         query_result = mqm(string_query="phone")
