@@ -118,7 +118,7 @@ class MongoDBQueriesManager:
             r" )?(([01][0-9]|2[0-3]):[0-5]\d(:[0-5]\d(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$"
         ): _date_parse,
         re.compile(
-            r"^[A-Za-z ]+(?=(,?,))(?:\1[A-Za-z ]+)+$"
+            r"^[A-Za-z\d ]+(?=(,?,))(?:\1[A-Za-z\d ]+)+$"
         ): lambda list_value: list_value.split(","),
         re.compile(
             r"\/((?![*+?])(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)"
