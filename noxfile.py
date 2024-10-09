@@ -5,7 +5,7 @@ import nox
 from nox import Session
 
 
-PYTHONS_TESTS = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+PYTHONS_TESTS = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 PYTHONS_BASE = ["3.10"]
 nox.options.reuse_existing_virtualenvs = False
 
@@ -89,7 +89,7 @@ def lints(session: Session) -> None:
     session.run("mkdir", "-p", f"reports/flake8/{session.name}", external=True)
 
     # Install lints dependencies
-    session.install("pylint", "flake8>=4.0.0,<5.0.0", "flake8-html==0.4.2")
+    session.install("pymongo", "pylint", "flake8", "flake8-html")
 
     # Run flake8
     session.run(
@@ -118,7 +118,7 @@ def formats(session: Session) -> None:
 @nox.session(python=PYTHONS_BASE)
 def types(session: Session) -> None:
     # Install types dependencies
-    session.install("dateparser", "mypy", "types-dateparser")
+    session.install("pymongo", "dateparser", "mypy", "types-dateparser")
 
     # Remove mypy cache directory
     session.run("rm", "-fr", ".mypy_cache", external=True)

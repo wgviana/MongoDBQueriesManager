@@ -11,6 +11,8 @@ import re
 from datetime import datetime
 from typing import Any, Callable, Pattern
 
+from bson import ObjectId
+
 
 try:
     from dateparser import parse
@@ -110,6 +112,17 @@ class MongoDBQueriesManager:
         "": "$exists",
     }
 
+    def convert_to_object_id(self, id_value: str) -> ObjectId:
+        """Converte o valor fornecido para o tipo adequado.
+
+        Args:
+            value (str): O valor a ser convertido.
+
+        Returns:
+            Any: O valor convertido no tipo correto.
+        """
+        return ObjectId(id_value)
+
     regex_dict: dict[str | Pattern[str], Any] = {
         re.compile(r"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"): float,
         re.compile(r"^[-+]?\d+$"): int,
@@ -124,6 +137,10 @@ class MongoDBQueriesManager:
             r"\/((?![*+?])(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)"
             r"\/((?:g(?:im?|mi?)?|i(?:gm?|mg?)?|m(?:gi?|ig?)?)?)"
         ): re.compile,
+        re.compile(r"^[0-9a-f]{24}$", re.IGNORECASE): ObjectId,
+        re.compile(
+            r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        ): lambda uuid_value: uuid_value,  # Regex para UUID do PostgreSQL
         "true": lambda boolean: True,
         "false": lambda boolean: False,
         "null": lambda null: None,
