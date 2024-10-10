@@ -17,8 +17,7 @@ if __name__ == "__main__":
 
     mongodb_query = mqm(
         string_query=(
-            "status=sent&toto=true&timestamp>2016-01-01&"
-            "author.firstName=/john/i&limit=100&skip=50&sort=-timestamp"
+            "frequency>5&text$=itaú&context=labflix,omnijs&fk_project=628948&remove=numbers&alpha=/itaú/i,/bradesco/i"
         )
     )
 

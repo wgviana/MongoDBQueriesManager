@@ -121,13 +121,6 @@ def mqm(
                 mongodb_query["projection"] = mongodb_queries_mgr.projection_logic(
                     projection_param=arg, population=None
                 )
-        elif arg.startswith("$text="):
-            mongodb_query["filter"] = {
-                **mongodb_query["filter"],
-                "$text": {
-                    "$search": mongodb_queries_mgr.text_operator_logic(text_param=arg)
-                },
-            }
         elif arg.startswith("populate="):
             pass
         elif arg != "":

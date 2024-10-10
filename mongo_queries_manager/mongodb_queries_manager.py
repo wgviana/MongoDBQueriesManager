@@ -110,18 +110,8 @@ class MongoDBQueriesManager:
         "<=": "$lte",
         "!": "$exists",
         "": "$exists",
+        "$=": "$regex",
     }
-
-    def convert_to_object_id(self, id_value: str) -> ObjectId:
-        """Converte o valor fornecido para o tipo adequado.
-
-        Args:
-            value (str): O valor a ser convertido.
-
-        Returns:
-            Any: O valor convertido no tipo correto.
-        """
-        return ObjectId(id_value)
 
     regex_dict: dict[str | Pattern[str], Any] = {
         re.compile(r"^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$"): float,
@@ -131,7 +121,7 @@ class MongoDBQueriesManager:
             r" )?(([01][0-9]|2[0-3]):[0-5]\d(:[0-5]\d(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$"
         ): _date_parse,
         re.compile(
-            r"^[A-Za-z\d ]+(?=(,?,))(?:\1[A-Za-z\d ]+)+$"
+            r"^[a-zA-Z\u00E0-\u00FC\u0100-\u024F\d ]+(?=(,?,))(?:\1[a-zA-Z\u00E0-\u00FC\u0100-\u024F\d ]+)+$"
         ): lambda list_value: list_value.split(","),
         re.compile(
             r"\/((?![*+?])(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)"
@@ -173,6 +163,9 @@ class MongoDBQueriesManager:
         else:
             key, value = "", filter_params
 
+        if operator == "$=" and value == "":
+            raise TextOperatorError("Bad $text value")
+
         value = self.cast_value_logic(value)
 
         # $eq logic
@@ -190,11 +183,22 @@ class MongoDBQueriesManager:
                 return {key: {"$in": casted_list_item}}
             if operator == "!=":
                 return {key: {"$nin": casted_list_item}}
+            if operator == "$=":
+                rules = []
+
+                for item in value:
+                    rules.append({key: {"$regex": item, "$options": "i"}})
+
+                return {"$and": rules}
+
             raise ListOperatorError("List operator not found")
 
         # $exists logic
         if operator in ["", "!"]:
             return {value: {self.mongodb_operator[operator]: operator == ""}}
+
+        if operator == "$=":
+            return {key: {self.mongodb_operator[operator]: value, "$options": "i"}}
 
         # $gt, $gte, $lt, $lte, $ne, logic
         return {key: {self.mongodb_operator[operator]: value}}
@@ -219,7 +223,6 @@ class MongoDBQueriesManager:
                         ) from err
 
                     return casted_value
-
         for regex, cast in self.regex_dict.items():
             if isinstance(regex, Pattern):
                 if regex.match(value):
@@ -239,7 +242,7 @@ class MongoDBQueriesManager:
         Returns:
             str: Return operator
         """
-        for operator in ["<=", ">=", "!=", "=", ">", "<", "!"]:
+        for operator in ["$=", "<=", ">=", "!=", "=", ">", "<", "!"]:
             if filter_params.find(operator) > -1:
                 return operator
         return ""
@@ -270,21 +273,6 @@ class MongoDBQueriesManager:
                     sort_params_final.append((param, ASCENDING))
             return sort_params_final
         return None
-
-    @staticmethod
-    def text_operator_logic(text_param: str) -> str:
-        """Convert text query into MongoDB format.
-
-        Args:
-            text_param (str): Text param from url query (ie, '$text=java shop -coffee')
-
-        Returns:
-            int: Limit integer value
-        """
-        if text_param == "$text=":
-            raise TextOperatorError("Bad $text value")
-
-        return text_param.split("=")[1]
 
     @staticmethod
     def limit_logic(limit_param: str) -> int:

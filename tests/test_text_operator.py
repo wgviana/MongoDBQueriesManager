@@ -11,10 +11,10 @@ from mongo_queries_manager import TextOperatorError, mqm
 class TestTextOperator:
     # Text operator good tests part
     def test_good_text_operator(self) -> None:
-        query_result = mqm(string_query="$text=toto")
+        query_result = mqm(string_query="text$=toto")
 
         assert query_result == {
-            "filter": {"$text": {"$search": "toto"}},
+            "filter": {"text": {"$regex": "toto", "$options": "i"}},
             "sort": None,
             "skip": 0,
             "limit": 0,
@@ -22,10 +22,15 @@ class TestTextOperator:
         }
 
     def test_good_text_operator2(self) -> None:
-        query_result = mqm(string_query='$text="toto"')
+        query_result = mqm(string_query="text$=toto,tata")
 
         assert query_result == {
-            "filter": {"$text": {"$search": '"toto"'}},
+            "filter": {
+                "$and": [
+                    {"text": {"$regex": "toto", "$options": "i"}},
+                    {"text": {"$regex": "tata", "$options": "i"}},
+                ]
+            },
             "sort": None,
             "skip": 0,
             "limit": 0,
@@ -35,6 +40,6 @@ class TestTextOperator:
     # Skip bad tests part
     def test_empty_test_operator(self) -> None:
         with pytest.raises(TextOperatorError) as excinfo:
-            _ = mqm(string_query="$text=")
+            _ = mqm(string_query="text$=")
 
         assert excinfo.value.__str__() == "Bad $text value"
